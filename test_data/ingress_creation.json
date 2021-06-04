@@ -1,0 +1,33 @@
+{
+  "kind": {
+    "group": "extensions",
+    "kind": "Ingress",
+    "version": "v1beta1"
+  },
+  "object": {
+    "metadata": {
+      "name": "prod",
+      "annotations": {
+        "kubernetes.io/ingress.class": "internal"
+      }
+    },
+    "spec": {
+      "rules": [
+        {
+          "host": "some-host.com",
+          "http": {
+            "paths": [
+              {
+                "path": "/",
+                "backend": {
+                  "serviceName": "service",
+                  "servicePort": "443"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
