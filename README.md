@@ -23,6 +23,16 @@ https://rustwasm.github.io/wasm-pack/installer/
 
 cargo build --target=wasm32-unknown-unknown --release
 ```
+
+PUSH STUFF
+
+docker login ghcr.io
+wasm-to-oci push target/wasm32-unknown-unknown/release/istio_ingress_mutation.wasm ghcr.io/darren-bell-nanthealth/kubewarden-policies/istio-ingress-mutation:latest
+
+docker login bundle.bar
+wasm-to-oci push target/wasm32-unknown-unknown/release/istio_ingress_mutation.wasm bundle.bar/u/darren-bell-nanthealth/wasm/istio-ingress-mutation:latest
+
+wasm-to-oci pull bundle.bar/u/darren-bell-nanthealth/wasm/istio-ingress-mutation:latest
 ## License
 
 ```

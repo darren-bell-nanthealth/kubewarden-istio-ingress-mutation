@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       REGISTRY: ghcr.io
-      REGISTRY_WASM_ARTIFACT_PREFIX: nanthealth
+      REGISTRY_WASM_ARTIFACT_PREFIX: darren-bell-nanthealth/kubewarden-policies
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
