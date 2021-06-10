@@ -7,7 +7,7 @@ use k8s_openapi::api::extensions::v1beta1 as extensions;
 
 extern crate kubewarden_policy_sdk as kubewarden;
 
-use kubewarden::{request::ValidationRequest, validate_settings, mutate_request, reject_request};
+use kubewarden::{request::ValidationRequest, validate_settings, accept_request, mutate_request, reject_request};
 
 mod settings;
 
@@ -27,31 +27,34 @@ pub extern "C" fn wapc_init() {
 fn validate(payload: &[u8]) -> CallResult {
     let validation_request: ValidationRequest<Settings> = ValidationRequest::new(payload)?;
     //let ingress = serde_json::from_value::<extensions::Ingress>(validation_req.request.object)?;
-
+    // TODO: REQUIRE VALIDATION FOR CERTAIN ANNOTATIONS
     match serde_json::from_value::<extensions::Ingress>(validation_request.request.object) {
         // NOTE 1
         Ok(ingress) => {
             let mutated_ingress_with_annotations = set_ingress_rewrite_annotations(ingress);
-            // let mutated_ingress_with_annotations_and_tls = set_ingress_tls_settings(mutated_ingress_with_annotations);
-            //
-            // // NOTE 3
-            // let mutated_object = serde_json::to_value(mutated_ingress_with_annotations_and_tls)?;
+            let mutated_ingress_with_annotations_and_tls = set_ingress_tls_settings(mutated_ingress_with_annotations);
+
+            // NOTE 3
+            let mutated_object = serde_json::to_value(mutated_ingress_with_annotations_and_tls).unwrap();
+
+            // let mutated_object = serde_json::to_value(&mutated_ingress_with_annotations).unwrap();
+            // match serde_json::to_value(mutated_ingress_with_annotations)? {
+            //     Ok(patched_object) => {
+            //         mutate_request(patched_object)
+            //     }
+            //     Err(_) => {
+            //         reject_request(Some(String::from("Something went wrong in the processing of the ingress mutation")), None)
+            //     }
+            // }
 
 
-            if let Some(patched_object) = serde_json::to_value(mutated_ingress_with_annotations)? {
-                mutate_request(patched_object)
-            } else {
-                reject_request(Some(String::from("Something went wrong in the processing of the ingress mutation")), None)
-            }
-
-            //let mutated_object = serde_json::to_value(mutated_ingress_with_annotations)?;
-            //reject_request(Some(String::from("So it did actually hit here")), None)
-            //mutate_request(&mutated_object)
+            mutate_request(&mutated_object)
         }
         Err(_) => {
             // We were forwarded a request we cannot unmarshal or
             // understand, just accept it
-            kubewarden::accept_request()
+            reject_request(Some(String::from("Something went wrong parsing the incoming ingress")), None)
+            //accept_request()
         }
     }
 }
@@ -136,157 +139,157 @@ fn set_ingress_rewrite_annotations(mut ingress: Ingress) -> Ingress {
 }
 
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//
-//     use kubewarden_policy_sdk::test::Testcase;
-//
-//     #[test]
-//     fn mutate_ingress_with_annotations_required_for_istio() -> Result<(), ()> {
-//         let settings = Settings {
-//             secret : String::from("ExternalSecret")
-//         };
-//
-//         let request_file = "test_data/ingress_creation.json";
-//         let tc = Testcase {
-//             name: String::from("Ingress Creation Istio related Annotations"),
-//             fixture_file: String::from(request_file),
-//             expected_validation_result: true,
-//             settings,
-//         };
-//
-//         let res = tc.eval(validate).unwrap();
-//         // NOTE 1
-//         assert!(
-//             res.mutated_object.is_some(),
-//             "Expected accepted object to be mutated",
-//         );
-//
-//         let json_ingess = res.mutated_object.unwrap();
-//         println!("{}", json_ingess.as_str());
-//         // NOTE 2
-//         let final_ingress =
-//             serde_json::from_str::<extensions::Ingress>(json_ingess.as_str()).unwrap();
-//         let final_annotations = final_ingress.metadata.annotations.unwrap();
-//         assert_eq!(
-//             final_annotations.get_key_value("kubewarden.policy.ingress/inspected"),
-//             Some((
-//                 &String::from("kubewarden.policy.ingress/inspected"),
-//                 &String::from("true")
-//             )),
-//         );
-//         assert_eq!(
-//             final_annotations.get_key_value("nginx.ingress.kubernetes.io/service-upstream"),
-//             Some((
-//                 &String::from("nginx.ingress.kubernetes.io/service-upstream"),
-//                 &String::from("true")
-//             )),
-//         );
-//         assert_eq!(
-//             final_annotations.get_key_value("nginx.ingress.kubernetes.io/upstream-vhost"),
-//             Some((
-//                 &String::from("nginx.ingress.kubernetes.io/upstream-vhost"),
-//                 &String::from("service.default.svc.cluster.local")
-//             )),
-//         );
-//
-//         Ok(())
-//     }
-//
-//     #[test]
-//     fn mutate_complex_ingress_with_annotations_required_for_istio() -> Result<(), ()> {
-//         let settings = Settings {
-//             secret : String::from("ExternalSecret")
-//         };
-//
-//         let request_file = "test_data/1_ingress_multiple_rules_without_rewrite_annotation.json";
-//         let tc = Testcase {
-//             name: String::from("Ingress Creation Istio related Annotations"),
-//             fixture_file: String::from(request_file),
-//             expected_validation_result: true,
-//             settings,
-//         };
-//
-//         let res = tc.eval(validate).unwrap();
-//         // NOTE 1
-//         assert!(
-//             res.mutated_object.is_some(),
-//             "Expected accepted object to be mutated",
-//         );
-//
-//         let json_ingess = res.mutated_object.unwrap();
-//         println!("{}", json_ingess.as_str());
-//         // NOTE 2
-//         let final_ingress =
-//             serde_json::from_str::<extensions::Ingress>(json_ingess.as_str()).unwrap();
-//         let final_annotations = final_ingress.metadata.annotations.unwrap();
-//         assert_eq!(
-//             final_annotations.get_key_value("kubewarden.policy.ingress/inspected"),
-//             Some((
-//                 &String::from("kubewarden.policy.ingress/inspected"),
-//                 &String::from("true")
-//             )),
-//         );
-//         assert_eq!(
-//             final_annotations.get_key_value("nginx.ingress.kubernetes.io/service-upstream"),
-//             Some((
-//                 &String::from("nginx.ingress.kubernetes.io/service-upstream"),
-//                 &String::from("true")
-//             )),
-//         );
-//         assert_eq!(
-//             final_annotations.get_key_value("nginx.ingress.kubernetes.io/upstream-vhost"),
-//             Some((
-//                 &String::from("nginx.ingress.kubernetes.io/upstream-vhost"),
-//                 &String::from("kelp-kelp-svc.default.svc.cluster.local")
-//             )),
-//         );
-//
-//         Ok(())
-//     }
-//
-//
-//     #[test]
-//     fn mutate_ingress_with_tls_required_for_tls_termination() -> Result<(), ()> {
-//         let settings = Settings {
-//             secret : String::from("ExternalSecret")
-//         };
-//
-//         let request_file = "test_data/ingress_creation.json";
-//         let tc = Testcase {
-//             name: String::from("Ingress Creation add annotations"),
-//             fixture_file: String::from(request_file),
-//             expected_validation_result: true,
-//             settings,
-//         };
-//
-//         let res = tc.eval(validate).unwrap();
-//         // NOTE 1
-//         assert!(
-//             res.mutated_object.is_some(),
-//             "Expected accepted object to be mutated",
-//         );
-//
-//         let json_ingess = res.mutated_object.unwrap();
-//         println!("{}", json_ingess.as_str());
-//
-//         let final_ingress =
-//             serde_json::from_str::<extensions::Ingress>(json_ingess.as_str()).unwrap();
-//         let tls_vec = final_ingress.spec.unwrap().tls.unwrap();
-//
-//         assert_eq!(tls_vec.len(), 1, "We are only expecting 1 tls entry but got {} ", tls_vec.len());
-//
-//         assert_eq!(
-//             tls_vec[0].secret_name,
-//             Some(String::from("internal-ingress-secret"))
-//         );
-//         assert_eq!(
-//             tls_vec[0].hosts.as_ref().unwrap()[0],
-//             "some-host.com",
-//         );
-//
-//         Ok(())
-//     }
-//
-// }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use kubewarden_policy_sdk::test::Testcase;
+
+    #[test]
+    fn mutate_ingress_with_annotations_required_for_istio() -> Result<(), ()> {
+        let settings = Settings {
+            secret : String::from("ExternalSecret")
+        };
+
+        let request_file = "test_data/ingress_creation.json";
+        let tc = Testcase {
+            name: String::from("Ingress Creation Istio related Annotations"),
+            fixture_file: String::from(request_file),
+            expected_validation_result: true,
+            settings,
+        };
+
+        let res = tc.eval(validate).unwrap();
+        // NOTE 1
+        assert!(
+            res.mutated_object.is_some(),
+            "Expected accepted object to be mutated",
+        );
+
+        let json_ingess = res.mutated_object.unwrap();
+        println!("{}", json_ingess.as_str());
+        // NOTE 2
+        let final_ingress =
+            serde_json::from_str::<extensions::Ingress>(json_ingess.as_str()).unwrap();
+        let final_annotations = final_ingress.metadata.annotations.unwrap();
+        assert_eq!(
+            final_annotations.get_key_value("kubewarden.policy.ingress/inspected"),
+            Some((
+                &String::from("kubewarden.policy.ingress/inspected"),
+                &String::from("true")
+            )),
+        );
+        assert_eq!(
+            final_annotations.get_key_value("nginx.ingress.kubernetes.io/service-upstream"),
+            Some((
+                &String::from("nginx.ingress.kubernetes.io/service-upstream"),
+                &String::from("true")
+            )),
+        );
+        assert_eq!(
+            final_annotations.get_key_value("nginx.ingress.kubernetes.io/upstream-vhost"),
+            Some((
+                &String::from("nginx.ingress.kubernetes.io/upstream-vhost"),
+                &String::from("service.default.svc.cluster.local")
+            )),
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn mutate_complex_ingress_with_annotations_required_for_istio() -> Result<(), ()> {
+        let settings = Settings {
+            secret : String::from("ExternalSecret")
+        };
+
+        let request_file = "test_data/1_ingress_multiple_rules_without_rewrite_annotation.json";
+        let tc = Testcase {
+            name: String::from("Ingress Creation Istio related Annotations"),
+            fixture_file: String::from(request_file),
+            expected_validation_result: true,
+            settings,
+        };
+
+        let res = tc.eval(validate).unwrap();
+        // NOTE 1
+        assert!(
+            res.mutated_object.is_some(),
+            "Expected accepted object to be mutated",
+        );
+
+        let json_ingess = res.mutated_object.unwrap();
+        println!("{}", json_ingess.as_str());
+        // NOTE 2
+        let final_ingress =
+            serde_json::from_str::<extensions::Ingress>(json_ingess.as_str()).unwrap();
+        let final_annotations = final_ingress.metadata.annotations.unwrap();
+        assert_eq!(
+            final_annotations.get_key_value("kubewarden.policy.ingress/inspected"),
+            Some((
+                &String::from("kubewarden.policy.ingress/inspected"),
+                &String::from("true")
+            )),
+        );
+        assert_eq!(
+            final_annotations.get_key_value("nginx.ingress.kubernetes.io/service-upstream"),
+            Some((
+                &String::from("nginx.ingress.kubernetes.io/service-upstream"),
+                &String::from("true")
+            )),
+        );
+        assert_eq!(
+            final_annotations.get_key_value("nginx.ingress.kubernetes.io/upstream-vhost"),
+            Some((
+                &String::from("nginx.ingress.kubernetes.io/upstream-vhost"),
+                &String::from("kelp-kelp-svc.default.svc.cluster.local")
+            )),
+        );
+
+        Ok(())
+    }
+
+
+    #[test]
+    fn mutate_ingress_with_tls_required_for_tls_termination() -> Result<(), ()> {
+        let settings = Settings {
+            secret : String::from("ExternalSecret")
+        };
+
+        let request_file = "test_data/ingress_creation.json";
+        let tc = Testcase {
+            name: String::from("Ingress Creation add annotations"),
+            fixture_file: String::from(request_file),
+            expected_validation_result: true,
+            settings,
+        };
+
+        let res = tc.eval(validate).unwrap();
+        // NOTE 1
+        assert!(
+            res.mutated_object.is_some(),
+            "Expected accepted object to be mutated",
+        );
+
+        let json_ingess = res.mutated_object.unwrap();
+        println!("{}", json_ingess.as_str());
+
+        let final_ingress =
+            serde_json::from_str::<extensions::Ingress>(json_ingess.as_str()).unwrap();
+        let tls_vec = final_ingress.spec.unwrap().tls.unwrap();
+
+        assert_eq!(tls_vec.len(), 1, "We are only expecting 1 tls entry but got {} ", tls_vec.len());
+
+        assert_eq!(
+            tls_vec[0].secret_name,
+            Some(String::from("internal-ingress-secret"))
+        );
+        assert_eq!(
+            tls_vec[0].hosts.as_ref().unwrap()[0],
+            "some-host.com",
+        );
+
+        Ok(())
+    }
+
+}
