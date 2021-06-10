@@ -39,7 +39,6 @@ fn validate(payload: &[u8]) -> CallResult {
             kubewarden::mutate_request(&mutated_object)
         }
         Err(_) => {
-            panic!("crash and burn");
             // We were forwarded a request we cannot unmarshal or
             // understand, just accept it
             kubewarden::accept_request()
