@@ -1,0 +1,15 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: prod
+  annotations:
+    kubernetes.io/ingress.class: internal
+spec:
+  rules:
+    - host: some-host.com
+      http:
+        paths:
+          - path: "/"
+            backend:
+              serviceName: service
+              servicePort: 443
