@@ -32,12 +32,21 @@ fn validate(payload: &[u8]) -> CallResult {
         // NOTE 1
         Ok(ingress) => {
             let mutated_ingress_with_annotations = set_ingress_rewrite_annotations(ingress);
-            let mutated_ingress_with_annotations_and_tls = set_ingress_tls_settings(mutated_ingress_with_annotations);
+            // let mutated_ingress_with_annotations_and_tls = set_ingress_tls_settings(mutated_ingress_with_annotations);
+            //
+            // // NOTE 3
+            // let mutated_object = serde_json::to_value(mutated_ingress_with_annotations_and_tls)?;
 
-            // NOTE 3
-            let mutated_object = serde_json::to_value(mutated_ingress_with_annotations_and_tls)?;
+
+            if let Some(patched_object) = serde_json::to_value(mutated_ingress_with_annotations)? {
+                mutate_request(patched_object)
+            } else {
+                reject_request(Some(String::from("Something went wrong in the processing of the ingress mutation")), None)
+            }
+
+            //let mutated_object = serde_json::to_value(mutated_ingress_with_annotations)?;
+            //reject_request(Some(String::from("So it did actually hit here")), None)
             //mutate_request(&mutated_object)
-            reject_request(Some(String::from("So it did actually hit here")), None)
         }
         Err(_) => {
             // We were forwarded a request we cannot unmarshal or
