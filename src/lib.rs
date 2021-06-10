@@ -39,6 +39,7 @@ fn validate(payload: &[u8]) -> CallResult {
             kubewarden::mutate_request(&mutated_object)
         }
         Err(_) => {
+            panic!("crash and burn");
             // We were forwarded a request we cannot unmarshal or
             // understand, just accept it
             kubewarden::accept_request()
@@ -178,6 +179,58 @@ mod tests {
             Some((
                 &String::from("nginx.ingress.kubernetes.io/upstream-vhost"),
                 &String::from("service.default.svc.cluster.local")
+            )),
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn mutate_complex_ingress_with_annotations_required_for_istio() -> Result<(), ()> {
+        let settings = Settings {
+            secret : String::from("ExternalSecret")
+        };
+
+        let request_file = "test_data/1_ingress_multiple_rules_without_rewrite_annotation.json";
+        let tc = Testcase {
+            name: String::from("Ingress Creation Istio related Annotations"),
+            fixture_file: String::from(request_file),
+            expected_validation_result: true,
+            settings,
+        };
+
+        let res = tc.eval(validate).unwrap();
+        // NOTE 1
+        assert!(
+            res.mutated_object.is_some(),
+            "Expected accepted object to be mutated",
+        );
+
+        let json_ingess = res.mutated_object.unwrap();
+        println!("{}", json_ingess.as_str());
+        // NOTE 2
+        let final_ingress =
+            serde_json::from_str::<extensions::Ingress>(json_ingess.as_str()).unwrap();
+        let final_annotations = final_ingress.metadata.annotations.unwrap();
+        assert_eq!(
+            final_annotations.get_key_value("kubewarden.policy.ingress/inspected"),
+            Some((
+                &String::from("kubewarden.policy.ingress/inspected"),
+                &String::from("true")
+            )),
+        );
+        assert_eq!(
+            final_annotations.get_key_value("nginx.ingress.kubernetes.io/service-upstream"),
+            Some((
+                &String::from("nginx.ingress.kubernetes.io/service-upstream"),
+                &String::from("true")
+            )),
+        );
+        assert_eq!(
+            final_annotations.get_key_value("nginx.ingress.kubernetes.io/upstream-vhost"),
+            Some((
+                &String::from("nginx.ingress.kubernetes.io/upstream-vhost"),
+                &String::from("kelp-kelp-svc.default.svc.cluster.local")
             )),
         );
 

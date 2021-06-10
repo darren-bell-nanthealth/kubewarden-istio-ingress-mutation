@@ -1,56 +1,61 @@
 {
-  "apiVersion": "networking.k8s.io/v1beta1",
-  "kind": "Ingress",
-  "metadata": {
-    "annotations": {
-      "kubernetes.io/ingress.class": "internal",
-      "nginx.ingress.kubernetes.io/affinity": "cookie",
-      "nginx.ingress.kubernetes.io/ssl-redirect": "false"
-    },
-    "labels": {
-      "app.kubernetes.io/instance": "kelp",
-      "app.kubernetes.io/managed-by": "Tiller",
-      "app.kubernetes.io/name": "test-ingress",
-      "app.kubernetes.io/part-of": "kubernetes-tools",
-      "app.kubernetes.io/version": "0.0.3",
-      "helm.sh/chart": "kelp-0.0.3",
-      "monitoring.nanthealth.com/application": "kelp",
-      "monitoring.nanthealth.com/owner": "Kubernetes-Team",
-      "monitoring.nanthealth.com/service": "platform"
-    },
-    "name": "pod1-example",
-    "namespace": "default"
+  "kind": {
+    "group": "networking.k8s.io",
+    "kind": "Ingress",
+    "version": "v1beta1"
   },
-  "spec": {
-    "rules": [
-      {
-        "host": "dtkt.navimedix.com",
-        "http": {
-          "paths": [
-            {
-              "backend": {
-                "serviceName": "kelp-kelp-svc",
-                "servicePort": "http"
-              },
-              "path": "/kelp"
-            }
-          ]
-        }
+  "object": {
+    "metadata": {
+      "annotations": {
+        "kubernetes.io/ingress.class": "internal",
+        "nginx.ingress.kubernetes.io/affinity": "cookie",
+        "nginx.ingress.kubernetes.io/ssl-redirect": "false"
       },
-      {
-        "host": "dtkt1.navimedix.com",
-        "http": {
-          "paths": [
-            {
-              "backend": {
-                "serviceName": "kelp-kelp-svc",
-                "servicePort": "http"
-              },
-              "path": "/kelp"
-            }
-          ]
+      "labels": {
+        "app.kubernetes.io/instance": "kelp",
+        "app.kubernetes.io/managed-by": "Tiller",
+        "app.kubernetes.io/name": "test-ingress",
+        "app.kubernetes.io/part-of": "kubernetes-tools",
+        "app.kubernetes.io/version": "0.0.3",
+        "helm.sh/chart": "kelp-0.0.3",
+        "monitoring.nanthealth.com/application": "kelp",
+        "monitoring.nanthealth.com/owner": "Kubernetes-Team",
+        "monitoring.nanthealth.com/service": "platform"
+      },
+      "name": "pod1-example",
+      "namespace": "default"
+    },
+    "spec": {
+      "rules": [
+        {
+          "host": "dtkt.navimedix.com",
+          "http": {
+            "paths": [
+              {
+                "backend": {
+                  "serviceName": "kelp-kelp-svc",
+                  "servicePort": "http"
+                },
+                "path": "/kelp"
+              }
+            ]
+          }
+        },
+        {
+          "host": "dtkt1.navimedix.com",
+          "http": {
+            "paths": [
+              {
+                "backend": {
+                  "serviceName": "kelp-kelp-svc",
+                  "servicePort": "http"
+                },
+                "path": "/kelp"
+              }
+            ]
+          }
         }
-      }
-    ]
+      ]
+    }
   }
 }
