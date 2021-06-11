@@ -35,7 +35,7 @@ fn validate(payload: &[u8]) -> CallResult {
                 set_ingress_tls_settings(mutated_ingress_with_annotations);
 
             // NOTE 3
-            let mutated_object =
+            let _mutated_object =
                 serde_json::to_value(mutated_ingress_with_annotations_and_tls).unwrap();
             //mutate_request(&mutated_object)
 
