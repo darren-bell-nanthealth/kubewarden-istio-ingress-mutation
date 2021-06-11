@@ -7,7 +7,9 @@ use k8s_openapi::api::extensions::v1beta1 as extensions;
 
 extern crate kubewarden_policy_sdk as kubewarden;
 
-use kubewarden::{request::ValidationRequest, validate_settings, accept_request, mutate_request, reject_request};
+use kubewarden::{
+    accept_request, mutate_request, reject_request, request::ValidationRequest, validate_settings,
+};
 
 mod settings;
 
@@ -16,7 +18,6 @@ use settings::Settings;
 use k8s_openapi::api::extensions::v1beta1::Ingress;
 use k8s_openapi::api::extensions::v1beta1::IngressTLS;
 // use log::{info, trace, warn};
-
 
 #[no_mangle]
 pub extern "C" fn wapc_init() {
@@ -32,19 +33,30 @@ fn validate(payload: &[u8]) -> CallResult {
         // NOTE 1
         Ok(ingress) => {
             let mutated_ingress_with_annotations = set_ingress_rewrite_annotations(ingress);
-            let mutated_ingress_with_annotations_and_tls = set_ingress_tls_settings(mutated_ingress_with_annotations);
+            let mutated_ingress_with_annotations_and_tls =
+                set_ingress_tls_settings(mutated_ingress_with_annotations);
 
             // NOTE 3
-            let mutated_object = serde_json::to_value(mutated_ingress_with_annotations_and_tls).unwrap();
+            let mutated_object =
+                serde_json::to_value(mutated_ingress_with_annotations_and_tls).unwrap();
             //mutate_request(&mutated_object)
 
-            reject_request(Some(String::from("Testing the processing of the ingress mutation")), None)
-
+            reject_request(
+                Some(String::from(
+                    "Testing the processing of the ingress mutation",
+                )),
+                None,
+            )
         }
         Err(_) => {
             // We were forwarded a request we cannot unmarshal or
             // understand, just accept it
-            reject_request(Some(String::from("Something went wrong parsing the incoming ingress")), None)
+            reject_request(
+                Some(String::from(
+                    "Something went wrong parsing the incoming ingress",
+                )),
+                None,
+            )
             //accept_request()
         }
     }
@@ -64,16 +76,20 @@ fn set_ingress_tls_settings(mut ingress: Ingress) -> Ingress {
         }
     });
 
-    let ingress_class = ingress.metadata.annotations.as_ref().unwrap().get("kubernetes.io/ingress.class");
+    let ingress_class = ingress
+        .metadata
+        .annotations
+        .as_ref()
+        .unwrap()
+        .get("kubernetes.io/ingress.class");
     let secret_name = match ingress_class.as_ref().unwrap().as_str() {
         "public" => "external-ingress-secret",
         "internal" => "internal-ingress-secret",
         _t => {
-            println!("About to panic getting the ingress class - {}", _t );
+            println!("About to panic getting the ingress class - {}", _t);
             panic!("crash and burn");
         }
     };
-
 
     match ingress_specification.tls {
         Some(_) => (), //TODO: ADD some log here
@@ -105,30 +121,43 @@ fn set_ingress_rewrite_annotations(mut ingress: Ingress) -> Ingress {
     );
 
     let default_namespace = "default".to_string();
-    let namespace = ingress.metadata.namespace.as_ref().unwrap_or(&default_namespace);
-    println!("Ingress Mutation - Annotations: Namespace that is found : {}", namespace);
+    let namespace = ingress
+        .metadata
+        .namespace
+        .as_ref()
+        .unwrap_or(&default_namespace);
+    println!(
+        "Ingress Mutation - Annotations: Namespace that is found : {}",
+        namespace
+    );
     ingress.spec.as_ref().map(|ingress_spec| {
         ingress_spec.rules.as_ref().map(|ingress_rules| {
             println!("Ingress Mutation - Annotations: Ingress Rules Found.");
-            let service_name = ingress_rules[0].http.as_ref().and_then(|v| {
-                v.paths[0].backend.service_name.clone()
-            });
+            let service_name = ingress_rules[0]
+                .http
+                .as_ref()
+                .and_then(|v| v.paths[0].backend.service_name.clone());
 
-            println!("Ingress Mutation - Annotations: Service Name that is found : {}", service_name.clone().unwrap());
+            println!(
+                "Ingress Mutation - Annotations: Service Name that is found : {}",
+                service_name.clone().unwrap()
+            );
             if let Some(service_name) = service_name {
                 new_annotations.insert(
                     String::from("nginx.ingress.kubernetes.io/upstream-vhost"),
-                    format!("{service_name}.{namespace}.svc.cluster.local", service_name = service_name, namespace = namespace),//String::from("service_name.$namespace.svc.cluster.local"),
+                    format!(
+                        "{service_name}.{namespace}.svc.cluster.local",
+                        service_name = service_name,
+                        namespace = namespace
+                    ), //String::from("service_name.$namespace.svc.cluster.local"),
                 );
             }
         })
     });
 
-
     ingress.metadata.annotations = Some(new_annotations);
     ingress
 }
-
 
 // #[cfg(test)]
 // mod tests {

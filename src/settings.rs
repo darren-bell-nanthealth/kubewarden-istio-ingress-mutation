@@ -28,7 +28,7 @@ mod tests {
     #[test]
     fn validate_settings() -> Result<(), ()> {
         let settings = Settings {
-            secret : String::from("ExternalSecret")
+            secret: String::from("ExternalSecret"),
         };
 
         assert!(settings.validate().is_ok());
