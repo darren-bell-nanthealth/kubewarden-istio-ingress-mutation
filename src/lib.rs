@@ -7,9 +7,7 @@ use k8s_openapi::api::extensions::v1beta1 as extensions;
 
 extern crate kubewarden_policy_sdk as kubewarden;
 
-use kubewarden::{
-    accept_request, mutate_request, reject_request, request::ValidationRequest, validate_settings,
-};
+use kubewarden::{accept_request, reject_request, request::ValidationRequest, validate_settings};
 
 mod settings;
 
@@ -51,13 +49,7 @@ fn validate(payload: &[u8]) -> CallResult {
         Err(_) => {
             // We were forwarded a request we cannot unmarshal or
             // understand, just accept it
-            reject_request(
-                Some(String::from(
-                    "Something went wrong parsing the incoming ingress",
-                )),
-                None,
-            )
-            //accept_request()
+            accept_request()
         }
     }
 }

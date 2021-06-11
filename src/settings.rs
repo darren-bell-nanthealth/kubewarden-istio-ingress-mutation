@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
 
 // Describe the settings your policy expects when
 // loaded by the policy server.
