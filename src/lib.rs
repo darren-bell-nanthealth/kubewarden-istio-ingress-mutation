@@ -7,7 +7,7 @@ use k8s_openapi::api::extensions::v1beta1 as extensions;
 
 extern crate kubewarden_policy_sdk as kubewarden;
 
-use kubewarden::{accept_request, reject_request, request::ValidationRequest, validate_settings};
+use kubewarden::{accept_request, mutate_request, request::ValidationRequest, validate_settings};
 
 mod settings;
 
@@ -35,16 +35,9 @@ fn validate(payload: &[u8]) -> CallResult {
                 set_ingress_tls_settings(mutated_ingress_with_annotations);
 
             // NOTE 3
-            let _mutated_object =
+            let mutated_object =
                 serde_json::to_value(mutated_ingress_with_annotations_and_tls).unwrap();
-            //mutate_request(&mutated_object)
-
-            reject_request(
-                Some(String::from(
-                    "Testing the processing of the ingress mutation",
-                )),
-                None,
-            )
+            mutate_request(&mutated_object)
         }
         Err(_) => {
             // We were forwarded a request we cannot unmarshal or
@@ -67,13 +60,6 @@ fn set_ingress_tls_settings(mut ingress: Ingress) -> Ingress {
             host_vec.push(host)
         }
     }
-    // ingress_specification.rules.as_ref().map(|ingress_rules| {
-    //     println!("Ingress Mutation - Annotations: Ingress Rules Found.");
-    //     for rule in ingress_rules.iter() {
-    //         let host = rule.host.clone().unwrap_or_default();
-    //         host_vec.push(host)
-    //     }
-    // });
 
     let ingress_class = ingress
         .metadata
