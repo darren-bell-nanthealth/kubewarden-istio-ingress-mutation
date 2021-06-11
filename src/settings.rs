@@ -12,7 +12,7 @@ impl kubewarden::settings::Validatable for Settings {
     fn validate(&self) -> Result<(), String> {
         // TODO: perform settings validation if applies
         if self.secret.is_empty() {
-            return Err(format!("The secret setting must have a value"));
+            return Err("The secret setting must have a value".to_string());
         }
         Ok(())
     }

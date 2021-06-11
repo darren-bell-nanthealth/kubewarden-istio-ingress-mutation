@@ -60,13 +60,20 @@ fn set_ingress_tls_settings(mut ingress: Ingress) -> Ingress {
     let mut host_vec: Vec<String> = Vec::new();
     let mut ingress_specification = ingress.spec.clone().unwrap_or_default();
 
-    ingress_specification.rules.as_ref().map(|ingress_rules| {
+    if let Some(ingress_rules) = ingress_specification.rules.as_ref() {
         println!("Ingress Mutation - Annotations: Ingress Rules Found.");
         for rule in ingress_rules.iter() {
             let host = rule.host.clone().unwrap_or_default();
             host_vec.push(host)
         }
-    });
+    }
+    // ingress_specification.rules.as_ref().map(|ingress_rules| {
+    //     println!("Ingress Mutation - Annotations: Ingress Rules Found.");
+    //     for rule in ingress_rules.iter() {
+    //         let host = rule.host.clone().unwrap_or_default();
+    //         host_vec.push(host)
+    //     }
+    // });
 
     let ingress_class = ingress
         .metadata
@@ -86,8 +93,10 @@ fn set_ingress_tls_settings(mut ingress: Ingress) -> Ingress {
     match ingress_specification.tls {
         Some(_) => (), //TODO: ADD some log here
         None => {
-            let mut tls: IngressTLS = Default::default();
-            tls.hosts = Some(host_vec);
+            let mut tls: IngressTLS = IngressTLS {
+                hosts: Some(host_vec),
+                ..Default::default()
+            };
             let secret_name = secret_name.to_string();
             tls.secret_name = Some(secret_name);
             tls_vec.push(tls);
