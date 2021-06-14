@@ -1,6 +1,6 @@
 {
   "kind": {
-    "group": "extensions",
+    "group": "networking.k8s.io",
     "kind": "Ingress",
     "version": "v1beta1"
   },

@@ -2,9 +2,6 @@ extern crate wapc_guest as guest;
 
 use guest::prelude::*;
 
-// use k8s_openapi::api::core::v1 as apicore;
-use k8s_openapi::api::extensions::v1beta1 as extensions;
-
 extern crate kubewarden_policy_sdk as kubewarden;
 
 use kubewarden::{accept_request, mutate_request, request::ValidationRequest, validate_settings};
@@ -13,8 +10,8 @@ mod settings;
 
 use settings::Settings;
 // use k8s_openapi::serde_json::Value;
-use k8s_openapi::api::extensions::v1beta1::Ingress;
-use k8s_openapi::api::extensions::v1beta1::IngressTLS;
+use k8s_openapi::api::networking::v1beta1::Ingress;
+use k8s_openapi::api::networking::v1beta1::IngressTLS;
 // use log::{info, trace, warn};
 
 #[no_mangle]
@@ -25,9 +22,8 @@ pub extern "C" fn wapc_init() {
 
 fn validate(payload: &[u8]) -> CallResult {
     let validation_request: ValidationRequest<Settings> = ValidationRequest::new(payload)?;
-    //let ingress = serde_json::from_value::<extensions::Ingress>(validation_req.request.object)?;
     // TODO: REQUIRE VALIDATION FOR CERTAIN ANNOTATIONS
-    match serde_json::from_value::<extensions::Ingress>(validation_request.request.object) {
+    match serde_json::from_value::<Ingress>(validation_request.request.object) {
         // NOTE 1
         Ok(ingress) => {
             let mutated_ingress_with_annotations = set_ingress_rewrite_annotations(ingress);
@@ -176,8 +172,7 @@ mod tests {
         let json_ingess = res.mutated_object.unwrap();
         println!("{}", json_ingess.as_str());
         // NOTE 2
-        let final_ingress =
-            serde_json::from_str::<extensions::Ingress>(json_ingess.as_str()).unwrap();
+        let final_ingress = serde_json::from_str::<Ingress>(json_ingess.as_str()).unwrap();
         let final_annotations = final_ingress.metadata.annotations.unwrap();
         assert_eq!(
             final_annotations.get_key_value("kubewarden.policy.ingress/inspected"),
@@ -228,8 +223,7 @@ mod tests {
         let json_ingess = res.mutated_object.unwrap();
         println!("{}", json_ingess.as_str());
         // NOTE 2
-        let final_ingress =
-            serde_json::from_str::<extensions::Ingress>(json_ingess.as_str()).unwrap();
+        let final_ingress = serde_json::from_str::<Ingress>(json_ingess.as_str()).unwrap();
         let final_annotations = final_ingress.metadata.annotations.unwrap();
         assert_eq!(
             final_annotations.get_key_value("kubewarden.policy.ingress/inspected"),
@@ -280,8 +274,7 @@ mod tests {
         let json_ingess = res.mutated_object.unwrap();
         println!("{}", json_ingess.as_str());
 
-        let final_ingress =
-            serde_json::from_str::<extensions::Ingress>(json_ingess.as_str()).unwrap();
+        let final_ingress = serde_json::from_str::<Ingress>(json_ingess.as_str()).unwrap();
         let tls_vec = final_ingress.spec.unwrap().tls.unwrap();
 
         assert_eq!(
