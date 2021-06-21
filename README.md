@@ -28,7 +28,7 @@ cargo build --target=wasm32-unknown-unknown --release
 apiVersion: policies.kubewarden.io/v1alpha2
 kind: ClusterAdmissionPolicy
 metadata:
-  name: istio-ingress-mutation
+  name: istio-ingress-mutation-networking-v1beta1
 spec:
   module: registry://ghcr.io/darren-bell-nanthealth/kubewarden-policies/istio-ingress-mutation-networking-v1beta1:latest
   rules:
@@ -40,7 +40,7 @@ spec:
     - UPDATE
   mutating: true
   settings:
-    secret: ExternalSecret
+    error_message: "There is a problem with the ingress that has been applied to the cluster, and it cannot be mutated to support Istio"
 ```
 ## License
 

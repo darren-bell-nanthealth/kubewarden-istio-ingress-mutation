@@ -5,13 +5,13 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub(crate) struct Settings {
     #[serde(default)]
-    pub secret: String,
+    pub error_message: String,
 }
 
 impl kubewarden::settings::Validatable for Settings {
     fn validate(&self) -> Result<(), String> {
         // TODO: perform settings validation if applies
-        if self.secret.is_empty() {
+        if self.error_message.is_empty() {
             return Err("The secret setting must have a value".to_string());
         }
         Ok(())
@@ -27,7 +27,7 @@ mod tests {
     #[test]
     fn validate_settings() -> Result<(), ()> {
         let settings = Settings {
-            secret: String::from("ExternalSecret"),
+            error_message: String::from("There is a problem with the ingress that has been applied to the cluster, and it cannot be mutated to support Istio"),
         };
 
         assert!(settings.validate().is_ok());

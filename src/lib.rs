@@ -151,7 +151,7 @@ mod tests {
     #[test]
     fn mutate_ingress_with_annotations_required_for_istio() -> Result<(), ()> {
         let settings = Settings {
-            secret: String::from("ExternalSecret"),
+            error_message: String::from("Blah Blah"),
         };
 
         let request_file = "test_data/ingress_creation.json";
@@ -202,7 +202,7 @@ mod tests {
     #[test]
     fn mutate_complex_ingress_with_annotations_required_for_istio() -> Result<(), ()> {
         let settings = Settings {
-            secret: String::from("ExternalSecret"),
+            error_message: String::from("Blah Blah"),
         };
 
         let request_file = "test_data/1_ingress_multiple_rules_without_rewrite_annotation.json";
@@ -253,7 +253,7 @@ mod tests {
     #[test]
     fn mutate_ingress_with_tls_required_for_tls_termination() -> Result<(), ()> {
         let settings = Settings {
-            secret: String::from("ExternalSecret"),
+            error_message: String::from("Blah Blah"),
         };
 
         let request_file = "test_data/ingress_creation.json";
