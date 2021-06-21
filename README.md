@@ -2,7 +2,7 @@ Please, note well: this file and the scaffold were generated from [a
 template](https://github.com/kubewarden/policy-rust-template). Make
 this project yours!
 
-# Kubewarden policy istio-ingress-mutation
+# Kubewarden policy istio-ingress-mutation-networking-v1beta1
 
 ## Description
 
@@ -30,7 +30,7 @@ kind: ClusterAdmissionPolicy
 metadata:
   name: istio-ingress-mutation
 spec:
-  module: registry://ghcr.io/darren-bell-nanthealth/kubewarden-policies/istio-ingress-mutation:latest
+  module: registry://ghcr.io/darren-bell-nanthealth/kubewarden-policies/istio-ingress-mutation-networking-v1beta1:latest
   rules:
   - apiGroups: ["networking.k8s.io"]
     apiVersions: ["v1beta1"]
