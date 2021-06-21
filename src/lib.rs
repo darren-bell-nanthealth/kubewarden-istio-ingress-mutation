@@ -33,7 +33,7 @@ fn validate(payload: &[u8]) -> CallResult {
             // NOTE 3
             let mutated_object =
                 serde_json::to_value(mutated_ingress_with_annotations_and_tls).unwrap();
-            mutate_request(&mutated_object)
+            mutate_request(mutated_object)
         }
         Err(_) => {
             // We were forwarded a request we cannot unmarshal or
@@ -170,9 +170,9 @@ mod tests {
         );
 
         let json_ingess = res.mutated_object.unwrap();
-        println!("{}", json_ingess.as_str());
+        // println!("{}", serde_json::to_string_pretty(&json_ingess).unwrap());
         // NOTE 2
-        let final_ingress = serde_json::from_str::<Ingress>(json_ingess.as_str()).unwrap();
+        let final_ingress = serde_json::from_value::<Ingress>(json_ingess).unwrap();
         let final_annotations = final_ingress.metadata.annotations.unwrap();
         assert_eq!(
             final_annotations.get_key_value("kubewarden.policy.ingress/inspected"),
@@ -221,9 +221,9 @@ mod tests {
         );
 
         let json_ingess = res.mutated_object.unwrap();
-        println!("{}", json_ingess.as_str());
+        // println!("{}", serde_json::to_string_pretty(&json_ingess).unwrap());
         // NOTE 2
-        let final_ingress = serde_json::from_str::<Ingress>(json_ingess.as_str()).unwrap();
+        let final_ingress = serde_json::from_value::<Ingress>(json_ingess).unwrap();
         let final_annotations = final_ingress.metadata.annotations.unwrap();
         assert_eq!(
             final_annotations.get_key_value("kubewarden.policy.ingress/inspected"),
@@ -272,9 +272,9 @@ mod tests {
         );
 
         let json_ingess = res.mutated_object.unwrap();
-        println!("{}", json_ingess.as_str());
+        // println!("{}", serde_json::to_string_pretty(&json_ingess).unwrap());
 
-        let final_ingress = serde_json::from_str::<Ingress>(json_ingess.as_str()).unwrap();
+        let final_ingress = serde_json::from_value::<Ingress>(json_ingess).unwrap();
         let tls_vec = final_ingress.spec.unwrap().tls.unwrap();
 
         assert_eq!(

@@ -38,34 +38,20 @@
         "kubernetes.io/ingress.class": "internal"
       },
       "name": "pod1-example",
-      "namespace": "default"
+      "namespace": "kubewarden"
     },
     "spec": {
       "rules": [
         {
-          "host": "dtkt.navimedix.com",
+          "host": "some.host.com",
           "http": {
             "paths": [
               {
                 "backend": {
-                  "serviceName": "kelp-kelp-svc",
+                  "serviceName": "some-svc",
                   "servicePort": "http"
                 },
-                "path": "/kelp"
-              }
-            ]
-          }
-        },
-        {
-          "host": "dtkt1.navimedix.com",
-          "http": {
-            "paths": [
-              {
-                "backend": {
-                  "serviceName": "kelp-kelp-svc",
-                  "servicePort": "http"
-                },
-                "path": "/kelp"
+                "path": "/app"
               }
             ]
           }

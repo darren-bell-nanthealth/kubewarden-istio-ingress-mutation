@@ -24,20 +24,6 @@ https://rustwasm.github.io/wasm-pack/installer/
 cargo build --target=wasm32-unknown-unknown --release
 ```
 
-PUSH STUFF
-
-docker login ghcr.io
-wasm-to-oci push target/wasm32-unknown-unknown/release/istio_ingress_mutation.wasm ghcr.io/darren-bell-nanthealth/kubewarden-policies/istio-ingress-mutation:latest
-
-docker login bundle.bar
-wasm-to-oci push target/wasm32-unknown-unknown/release/istio_ingress_mutation.wasm bundle.bar/u/darren-bell-nanthealth/wasm/istio-ingress-mutation:latest
-
-wasm-to-oci pull bundle.bar/u/darren-bell-nanthealth/wasm/istio-ingress-mutation:latest
-
-
-kwctl run target/wasm32-unknown-unknown/release/istio_ingress_mutation.wasm --request-path ./test_data/6_full_admission_review.json
-
-
 ```yaml
 apiVersion: policies.kubewarden.io/v1alpha2
 kind: ClusterAdmissionPolicy
@@ -47,12 +33,14 @@ spec:
   module: registry://ghcr.io/darren-bell-nanthealth/kubewarden-policies/istio-ingress-mutation:latest
   rules:
   - apiGroups: ["networking.k8s.io"]
-    apiVersions: ["v1beta1", "v1"]
+    apiVersions: ["v1beta1"]
     resources: ["ingresses"]
     operations:
     - CREATE
     - UPDATE
   mutating: true
+  settings:
+    secret: ExternalSecret
 ```
 ## License
 
