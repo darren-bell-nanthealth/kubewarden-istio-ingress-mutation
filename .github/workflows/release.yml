@@ -47,12 +47,12 @@ jobs:
       - name: Publish Wasm policy artifact to OCI registry with the 'latest' tag
         if: ${{ startsWith(github.ref, 'refs/heads/') }}
         run: |
-          ./linux-amd64-wasm-to-oci push target/wasm32-unknown-unknown/release/istio_ingress_mutation.wasm ${{ env.REGISTRY }}/${{ env.REGISTRY_WASM_ARTIFACT_PREFIX }}/istio-ingress-mutation:latest
+          ./linux-amd64-wasm-to-oci push target/wasm32-unknown-unknown/release/istio_ingress_mutation_networking_v1beta1.wasm ${{ env.REGISTRY }}/${{ env.REGISTRY_WASM_ARTIFACT_PREFIX }}/istio-ingress-mutation-networking-v1beta1:latest
       - name: Publish Wasm policy artifact to OCI registry with the version tag and 'latest'
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         run: |
           export IMAGE_TAG=$(echo $GITHUB_REF | sed -e "s|refs/tags/||")
-          ./linux-amd64-wasm-to-oci push target/wasm32-unknown-unknown/release/istio_ingress_mutation.wasm ${{ env.REGISTRY }}/${{ env.REGISTRY_WASM_ARTIFACT_PREFIX }}/istio-ingress-mutation:${IMAGE_TAG}
+          ./linux-amd64-wasm-to-oci push target/wasm32-unknown-unknown/release/istio_ingress_mutation_networking_v1beta1.wasm ${{ env.REGISTRY }}/${{ env.REGISTRY_WASM_ARTIFACT_PREFIX }}/istio-ingress-mutation-v1beta1:${IMAGE_TAG}
       - name: Create Release
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         id: create_release
@@ -72,6 +72,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url  }}
-          asset_path: target/wasm32-unknown-unknown/release/istio_ingress_mutation.wasm
+          asset_path: target/wasm32-unknown-unknown/release/istio_ingress_mutation_networking_v1beta1.wasm
           asset_name: policy.wasm
           asset_content_type: application/wasm

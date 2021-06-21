@@ -131,7 +131,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "istio-ingress-mutation"
+name = "istio-ingress-mutation-networking-v1beta1"
 version = "0.1.0"
 dependencies = [
  "env_logger",
